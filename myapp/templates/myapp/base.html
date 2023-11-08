@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="en">
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'myapp/style.css'%}" />
+        <title>E-Learning WebApp - {% block title %}{% endblock %}</title>
+    </head>
+    <body>
+        <header>
+            <nav>
+                <ul>
+                    <li>
+                        <a href="{% url 'index' %}">Home</a>
+                    </li>
+
+                    <li>
+                        <a href="{% url 'about' %}">About</a>
+                    </li>
+                </ul>
+
+                <div>
+                    Hello, {% block user %} {% endblock %}
+                </div>
+            </nav>
+        </header>
+
+        <main>
+            {% block body_block %} {% endblock %}
+        </main>
+    </body>
+</html>
