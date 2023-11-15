@@ -78,6 +78,8 @@ def place_order(request):
                 msg = 'You exceeded the number of levels for this course.'
             else:
                 msg = 'Your course has been ordered successfully.'
+                order.order_status = 0
+            order.save()
         else:
             msg = 'Form is not valid.'
     else:
