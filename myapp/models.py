@@ -1,4 +1,6 @@
 from django.db import models
+from django.utils import timezone
+
 
 class Student(models.Model):
     STUDENT_STATUS_CHOICES = [
@@ -48,6 +50,36 @@ class Course(models.Model):
     end_date = models.DateField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     level = models.CharField(max_length=10, choices=LEVEL_CHOICES, default="BE")
+    interested = models.PositiveIntegerField(default=0)
+
+    def get_level_id(self):
+        if self.level == "BE":
+            return 1
+        elif self.level == "IN":
+            return 2
+        elif self.level == "AD":
+            return 3
 
     def __str__(self):
         return f'{self.title}'
+
+
+class Order(models.Model):
+    ORDER_STATUS_CHOICES = [
+        (0, 'Order Confirmed'),
+        (1, 'Order Cancelled'),
+    ]
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    student = models.ForeignKey(Student, on_delete=models.CASCADE)
+    order_status = models.IntegerField(choices=ORDER_STATUS_CHOICES, default=1)
+    order_date = models.DateField(default=timezone.now)
+    order_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    levels = models.PositiveIntegerField(default=1)
+
+    def discount(self):
+        discount_value = 0.1 * float(self.course.price)  # 10% discount
+        self.order_price = float(self.course.price) - discount_value
+
+    def __str__(self):
+        return f'{self.student} - {self.course} - {self.get_order_status_display()}'
