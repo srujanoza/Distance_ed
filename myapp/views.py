@@ -1,6 +1,10 @@
 from django.shortcuts import get_object_or_404, render, redirect
-from .models import Category, Course
+from .models import Category, Course, Student
 from .forms import OrderForm, InterestForm
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
 
 def index(request):
@@ -104,3 +108,57 @@ def course_detail(request, course_id):
                 return redirect('index')  # Redirect to the main index page
 
     return render(request, 'myapp/course_detail.html', {'course': course, 'form': form})
+
+
+# Create your views here.
+def user_login(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(username=username, password=password)
+        if user:
+            if user.is_active:
+                login(request, user)
+                return HttpResponseRedirect(reverse('index'))
+            else:
+                return render(request, 'myapp/login.html', {'message': 'your account is disabled'})
+        else:
+            return render(request, 'myapp/login.html', {'message': 'Invalid login details'})
+    else:
+        return render(request, 'myapp/login.html')
+
+
+@login_required
+def user_logout(request):
+    logout(request)
+    return HttpResponseRedirect(reverse('index'))
+
+
+@login_required
+def myaccount(request):
+    user = request.user
+    student = Student.objects.filter(first_name__iexact=user)
+    print(student)
+    # Check if the logged-in user is a Student
+    if student.status == 'GD':
+
+        # Get the first and last name of the student
+        first_name = user.first_name
+        last_name = user.last_name
+
+        # Get all courses ordered by the student
+        ordered_courses = Course.objects.filter(order__student=user)
+
+        # Get all courses the student is interested in
+        interested_courses = user.interested_courses.all()
+
+        context = {
+            'first_name': first_name,
+            'last_name': last_name,
+            'ordered_courses': ordered_courses,
+            'interested_courses': interested_courses,
+        }
+
+        return render(request, 'myapp/myaccount.html', context)
+    else:
+        return render(request, 'myapp/myaccount.html', {'message': 'You are not a registered Student!'})
