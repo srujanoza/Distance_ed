@@ -1,0 +1,21 @@
+{% extends 'myapp/base.html' %}
+{% block title %}
+    Courses
+{% endblock %}
+
+{% block body_block %}
+    <h2>Courses</h2>
+    {% if course_list %}
+        <ul>
+            {% for course in course_list %}
+                <li><a href="{% url 'course_detail' course.id %}">{{ course.title }}</a></li>
+            {% endfor %}
+        </ul>
+
+        <div class="btn btn-primary">
+            <a href="{% url 'place_order' %}">Place an Order</a>
+        </div>
+    {% else %}
+        <strong>Courses will be added soon!</strong>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,32 @@
+<!-- myappF23/templates/myappF23/myaccount.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Account</title>
+</head>
+<body>
+
+  {% if message %}
+    <div>not logged in</div>
+  {% else %}
+    <h2>Welcome, {{ first_name }} {{ last_name }}!</h2>
+
+    <h3>Ordered Courses:</h3>
+    <ul>
+      {% for course in ordered_courses %}
+        <li>{{ course.name }}</li>
+      {% endfor %}
+    </ul>
+
+    <h3>Interested Courses:</h3>
+    <ul>
+      {% for course in interested_courses %}
+        <li>{{ course.name }}</li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+</body>
+</html>
