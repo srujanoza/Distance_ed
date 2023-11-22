@@ -1,6 +1,8 @@
 from django import forms
 from django.forms import ModelForm, widgets
 from myapp.models import Order
+from django.contrib.auth.forms import AuthenticationForm
+
 
 
 class InterestForm(forms.Form):
@@ -39,3 +41,17 @@ class OrderForm(ModelForm):
             'student': forms.RadioSelect,
             'order_date': forms.SelectDateWidget,
         }
+
+class LoginForm(AuthenticationForm):
+    class Meta:
+        model = None  # No model is associated with this form
+        fields = ["username", "password"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["username"].widget.attrs.update(
+            {"class": "form-control", "placeholder": "Username"}
+        )
+        self.fields["password"].widget.attrs.update(
+            {"class": "form-control", "placeholder": "Password"}
+        )

@@ -1,5 +1,6 @@
 from django.db import models
 from django.utils import timezone
+from django.core.validators import RegexValidator
 
 
 class Student(models.Model):
@@ -8,6 +9,9 @@ class Student(models.Model):
         ('SP', 'Suspended'),
         ('GD', 'Graduated'),
     ]
+    alphanumeric = RegexValidator(r'^[0-9a-zA-Z]*$', 'Only alphanumeric characters are allowed.')
+
+    username = models.CharField(max_length=100, validators=[alphanumeric], default='defaultuser123')
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
     email = models.EmailField(max_length=100)
@@ -51,6 +55,7 @@ class Course(models.Model):
     price = models.DecimalField(max_digits=10, decimal_places=2)
     level = models.CharField(max_length=10, choices=LEVEL_CHOICES, default="BE")
     interested = models.PositiveIntegerField(default=0)
+    interested_students = models.ManyToManyField(Student, related_name='interested_courses', blank=True)
 
     def get_level_id(self):
         if self.level == "BE":

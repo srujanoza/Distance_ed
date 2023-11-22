@@ -1,34 +1,24 @@
-<!-- templates/login.html -->
+{% extends 'myapp/base.html' %}
 
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Login</title>
-        <script src="https://cdn.tailwindcss.com"></script>
-    </head>
-    <body>
-      <div class="max-w-lg mx-auto mt-28 p-5 rounded-sm bg-slate-100">
-          <a href="{% url 'index' %}" class="bg-gray-400 px-2 py-1 rounded text-white cursor-pointer    ">Home</a>
-        <h2 class="text-3xl font-bold text-center mb-2">Login</h2>
+{% block title %}
+Login
+{% endblock %}
 
-        {% if message %}
-          <p class="bg-red-100 rounded p-2 text-red-700 my-2">{{ message }}</p>
-        {% endif %}
+{% block body_block %}
+<div style="width: 100%; max-width: 400px; margin: 0 auto; padding: 20px;">
+    <h2 style="text-align: center;">Login</h2>
+    <form method="post" action="{% url 'user_login' %}" style="display: flex; flex-direction: column; gap: 10px;">
+        {% csrf_token %}
+        <div style="display: flex; flex-direction: column;">
 
-        <form method="post" action="">
-          {% csrf_token %}
-            <div class="flex flex-col gap-3">
-              <label for="username">Username:</label>
-              <input type="text" id="username" name="username" class="px-2 py-1 rounded" required>
-            </div>
-            <div class="flex flex-col gap-3 mt-3">
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" class="px-2 py-1 rounded" required>
-            </div>
-            <button type="submit" class="mt-5 bg-blue-400 text-white rounded px-2 py-1 text-lg font-medium border border-blue-400 cursor-pointer hover:text-black hover:bg-white">Login</button>
-        </form>
-      </div>
-    </body>
-</html>
+            <label for="id_username" style="margin-bottom: 5px;">Username:</label>
+            <input type="text" name="username" id="id_username" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+
+            <label for="id_password" style="margin-bottom: 5px; margin-top: 10px;">Password:</label>
+            <input type="password" name="password" id="id_password" style="padding: 10px; border: 1px solid #ccc; border-radius: 4px;">
+        </div>
+
+        <button type="submit" style="background-color: blue; color: white; padding: 10px; border: none; border-radius: 4px; cursor: pointer;">Submit</button>
+    </form>
+</div>
+{% endblock %}

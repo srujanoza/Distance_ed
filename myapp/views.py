@@ -1,9 +1,11 @@
+from datetime import datetime
+
 from django.shortcuts import get_object_or_404, render, redirect
-from .models import Category, Course, Student
-from .forms import OrderForm, InterestForm
+from .models import Category, Course, Student, Order
+from .forms import OrderForm, InterestForm, LoginForm
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, HttpResponse
 from django.urls import reverse
 
 
@@ -101,64 +103,85 @@ def course_detail(request, course_id):
         if form.is_valid():
             interested = form.cleaned_data['interested']
 
-            # If interested is 1, increment the interested field for the course
             if interested == 1:
                 course.interested += 1
                 course.save()
+
+                user = request.user
+                try:
+                    student = Student.objects.get(username=user.username)
+                    student.interested_courses.add(course)
+                except Student.DoesNotExist:
+                    pass  # User is not a student or not found
+
                 return redirect('index')  # Redirect to the main index page
 
     return render(request, 'myapp/course_detail.html', {'course': course, 'form': form})
 
-
 # Create your views here.
 def user_login(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-        user = authenticate(username=username, password=password)
-        if user:
-            if user.is_active:
-                login(request, user)
-                return HttpResponseRedirect(reverse('index'))
+    if request.method == "POST":
+        form = LoginForm(request, data=request.POST)
+        if form.is_valid():
+            username = request.POST["username"]
+            password = request.POST["password"]
+            user = authenticate(request, username=username, password=password)
+            print(user.is_active)
+
+            if user:
+                if user.is_active:
+                    login(request, user)
+
+                    # Generate the date and time of the current login
+                    current_login_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+                    # Store this value as a session parameter (last_login_info)
+                    request.session["last_login_info"] = current_login_time
+
+                    # # Set the session expiry to 5 minutes
+                    # request.session.set_expiry(300)
+
+                    return HttpResponseRedirect(reverse("index"))
+                else:
+                    return HttpResponse("Your account is disabled.")
             else:
-                return render(request, 'myapp/login.html', {'message': 'your account is disabled'})
+                return HttpResponse("Invalid login details.")
         else:
-            return render(request, 'myapp/login.html', {'message': 'Invalid login details'})
+            # Don't reinitialize the form here
+            pass
     else:
-        return render(request, 'myapp/login.html')
+        form = LoginForm()
+
+    return render(request, "myapp/login.html", {"form": form})
 
 
 @login_required
 def user_logout(request):
+    # Log out the current user by deleting the request session
+    del request.session["last_login_info"]
+
+    # Since SESSION_EXPIRE_AT_BROWSER_CLOSE is True, we don't need to set session expiry here.
+    # # Make the user’s session cookies expire when the user’s web browser is closed
+    # request.session.set_expiry(0)
+
     logout(request)
-    return HttpResponseRedirect(reverse('index'))
+
+    return HttpResponseRedirect(reverse("login"))
 
 
 @login_required
 def myaccount(request):
     user = request.user
-    student = Student.objects.filter(first_name__iexact=user)
-    print(student)
-    # Check if the logged-in user is a Student
-    if student.status == 'GD':
-
-        # Get the first and last name of the student
-        first_name = user.first_name
-        last_name = user.last_name
-
-        # Get all courses ordered by the student
-        ordered_courses = Course.objects.filter(order__student=user)
-
-        # Get all courses the student is interested in
-        interested_courses = user.interested_courses.all()
-
-        context = {
-            'first_name': first_name,
-            'last_name': last_name,
-            'ordered_courses': ordered_courses,
-            'interested_courses': interested_courses,
-        }
-
-        return render(request, 'myapp/myaccount.html', context)
-    else:
-        return render(request, 'myapp/myaccount.html', {'message': 'You are not a registered Student!'})
+    try:
+        student = Student.objects.get(username=user.username)
+        # Fetch courses ordered and interested by the student
+        courses_ordered = Order.objects.filter(student=student)
+        courses_interested = Course.objects.filter(interested_students=student)
+        return render(request, "myapp/myaccount.html", {
+            "full_name": f"{student.first_name} {student.last_name}",
+            "courses_ordered": courses_ordered,
+            "courses_interested": courses_interested,
+        })
+    except Student.DoesNotExist:
+        # User is not a student
+        return HttpResponse("You are not a registered student!")
